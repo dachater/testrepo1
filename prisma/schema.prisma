@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ANALYST
+  REVIEWER
+  VIEWER
+}
+
+enum SampleStatus {
+  RECEIVED
+  IN_TESTING
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum RunStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(ANALYST)
+  createdAt DateTime @default(now())
+  received  Sample[]
+  runs      TestRun[]
+}
+
+model Product {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  specifications Specification[]
+  samples        Sample[]
+}
+
+model Specification {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  parameter String
+  unit      String
+  minValue  Float?
+  maxValue  Float?
+
+  @@unique([productId, parameter])
+}
+
+model Sample {
+  id         String         @id @default(cuid())
+  code       String         @unique
+  productId  String
+  product    Product        @relation(fields: [productId], references: [id])
+  lot        String
+  status     SampleStatus   @default(RECEIVED)
+  location   String?
+  receivedAt DateTime       @default(now())
+  receivedBy String
+  receiver   User           @relation(fields: [receivedBy], references: [id])
+  custody    CustodyEvent[]
+  runs       TestRun[]
+}
+
+model CustodyEvent {
+  id        String   @id @default(cuid())
+  sampleId  String
+  sample    Sample   @relation(fields: [sampleId], references: [id])
+  fromLabel String?
+  toLabel   String
+  note      String?
+  at        DateTime @default(now())
+}
+
+model TestMethod {
+  id      String    @id @default(cuid())
+  name    String
+  version String
+  runs    TestRun[]
+
+  @@unique([name, version])
+}
+
+model TestRun {
+  id          String     @id @default(cuid())
+  sampleId    String
+  sample      Sample     @relation(fields: [sampleId], references: [id])
+  methodId    String
+  method      TestMethod @relation(fields: [methodId], references: [id])
+  analystId   String
+  analyst     User       @relation(fields: [analystId], references: [id])
+  status      RunStatus  @default(IN_PROGRESS)
+  startedAt   DateTime   @default(now())
+  completedAt DateTime?
+  results     Result[]
+}
+
+model Result {
+  id        String  @id @default(cuid())
+  runId     String
+  run       TestRun @relation(fields: [runId], references: [id])
+  parameter String
+  value     Float
+  unit      String
+  passed    Boolean
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  entity    String
+  entityId  String
+  action    String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+}
