@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Random Number</title>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    #number { font-size: 6rem; margin: 1rem; }
+    button { font-size: 1.25rem; padding: 0.5rem 1.5rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="number">?</div>
+  <button id="roll">Get a random number (1-100)</button>
+  <script>
+    document.getElementById("roll").addEventListener("click", () => {
+      document.getElementById("number").textContent = Math.floor(Math.random() * 100) + 1;
+    });
+  </script>
+</body>
+</html>
